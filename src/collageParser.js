@@ -212,10 +212,20 @@ function parseTorrentRow(row, mediaSource = '') {
   // Get quality info using site-specific extraction method
   const qualityText = extractQualityText(row, site);
   
-  // Extract media from quality text if not provided from edition row
-  let torrentMedia = mediaSource;
+  // Determine media source: prefer edition row media, only extract from quality text if it contains media info
+  // Quality text may be "FLAC / Lossless" (no media) or "WEB / FLAC / 24bit Lossless" (with media)
+  let torrentMedia = mediaSource || '';
   if (qualityText) {
-    torrentMedia = parseMediaFromText(qualityText);
+    // Check if quality text actually contains media info before extracting
+    const mediaTypes = ['CD', 'WEB', 'Vinyl', 'SACD', 'DVD', 'Blu-ray', 'Cassette', 'DAT', 'Soundboard'];
+    const hasMediaInQuality = mediaTypes.some(media => qualityText.includes(media));
+    if (hasMediaInQuality) {
+      torrentMedia = parseMediaFromText(qualityText);
+    }
+  }
+  // Default to CD only if no media source was found anywhere
+  if (!torrentMedia) {
+    torrentMedia = 'CD';
   }
   
   // Get stats (size, snatches, seeders, leechers)
