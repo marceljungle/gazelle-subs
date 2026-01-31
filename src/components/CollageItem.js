@@ -1,6 +1,43 @@
 import styles from '../styles.module.css';
 
 /**
+ * Get unique quality formats from torrents (FLAC, MP3, etc.)
+ */
+function getUniqueQualities(torrents) {
+  const qualities = new Set();
+  for (const t of torrents) {
+    const qualityType = t.qualityType || t.quality;
+    if (qualityType) {
+      // Extract just the format part (e.g., "FLAC / Lossless" -> "FLAC Lossless")
+      const simplified = qualityType
+        .replace('FLAC / 24bit Lossless', 'FLAC 24')
+        .replace('FLAC / Lossless', 'FLAC')
+        .replace('MP3 / 320', 'MP3 320')
+        .replace('MP3 / V0 (VBR)', 'V0')
+        .replace('MP3 / V2 (VBR)', 'V2');
+      qualities.add(simplified);
+    }
+  }
+  return Array.from(qualities);
+}
+
+/**
+ * Get unique media sources from torrents (CD, WEB, Vinyl, etc.)
+ */
+function getUniqueSources(torrents) {
+  const sources = new Set();
+  for (const t of torrents) {
+    if (t.mediaSource && t.mediaSource !== 'CD') {
+      // Only show non-CD sources as CD is the default
+      sources.add(t.mediaSource);
+    } else if (t.mediaSource === 'CD') {
+      sources.add('CD');
+    }
+  }
+  return Array.from(sources);
+}
+
+/**
  * Group Item Component - Displays a single torrent group
  */
 export function GroupItem({ group, onToggle, isSelected }) {
@@ -9,10 +46,8 @@ export function GroupItem({ group, onToggle, isSelected }) {
     onToggle(group.id);
   };
 
-  const qualitySummary = group.torrents
-    .map(t => t.quality.split(' / ')[0])
-    .filter((v, i, a) => a.indexOf(v) === i)
-    .join(', ');
+  const qualities = getUniqueQualities(group.torrents);
+  const sources = getUniqueSources(group.torrents);
 
   return (
     <div className={`${styles['group-item']} ${isSelected ? styles.selected : ''}`}>
@@ -37,7 +72,10 @@ export function GroupItem({ group, onToggle, isSelected }) {
           {group.year} • {group.torrents.length} torrent{group.torrents.length > 1 ? 's' : ''}
         </div>
         <div className={styles['group-torrents']}>
-          Available: {qualitySummary}
+          <span className={styles['group-qualities']}>🎵 {qualities.join(', ') || 'Unknown'}</span>
+          {sources.length > 0 && (
+            <span className={styles['group-sources']}> • 💿 {sources.join(', ')}</span>
+          )}
         </div>
         {group.tags.length > 0 && (
           <div className={styles['group-tags']}>

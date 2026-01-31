@@ -117,6 +117,70 @@ export function getTorrentPass() {
 }
 
 /**
+ * Extract quality text from a torrent row using site-specific configuration
+ * @param {Element} row - Torrent row element
+ * @param {Object} site - Site configuration
+ * @returns {string} Quality text
+ */
+function extractQualityText(row, site) {
+  const extraction = site.qualityExtraction;
+  
+  if (!extraction) {
+    // Fallback: try generic extraction
+    return extractQualityFallback(row);
+  }
+  
+  if (extraction.method === 'selector' && extraction.selector) {
+    // Use CSS selector to find quality element
+    const qualityLink = row.querySelector(extraction.selector);
+    if (qualityLink) {
+      const text = qualityLink.textContent.trim();
+      // Extract from brackets if present
+      const bracketMatch = text.match(/\[([^\]]+)\]/);
+      return bracketMatch ? bracketMatch[1].trim() : text;
+    }
+  }
+  
+  if (extraction.method === 'regex') {
+    const rowText = row.textContent;
+    
+    // Try primary pattern
+    if (extraction.pattern) {
+      const match = rowText.match(extraction.pattern);
+      if (match) return match[1].trim();
+    }
+    
+    // Try fallback pattern
+    if (extraction.fallbackPattern) {
+      const match = rowText.match(extraction.fallbackPattern);
+      if (match) return match[1].trim();
+    }
+  }
+  
+  // Generic fallback
+  return extractQualityFallback(row);
+}
+
+/**
+ * Generic fallback for quality extraction
+ * @param {Element} row - Torrent row element
+ * @returns {string} Quality text
+ */
+function extractQualityFallback(row) {
+  const rowText = row.textContent;
+  
+  // Try pattern with media source: "[WEB / FLAC / 24bit Lossless]"
+  const withMediaMatch = rowText.match(/\[((?:CD|WEB|Vinyl|SACD|DVD|Blu-ray|Cassette|DAT|Soundboard)\s*\/\s*(?:FLAC|MP3)[^\]]*)\]/);
+  if (withMediaMatch) return withMediaMatch[1].trim();
+  
+  // Try pattern without media: "FLAC / 24bit Lossless"
+  const formatMatch = rowText.match(/((?:FLAC|MP3)\s*\/\s*(?:24bit\s+)?(?:Lossless|320|V0|V2)[^<\]]*)/i);
+  if (formatMatch) return formatMatch[1].trim();
+  
+  return '';
+}
+
+/**
  * Parse a single torrent row
  * @param {Element} row - Torrent row element
  * @param {string} mediaSource - Media source from edition row
@@ -145,34 +209,12 @@ function parseTorrentRow(row, mediaSource = '') {
   
   const torrentId = torrentIdMatch[1];
   
-  // Get quality info - find the link or text containing quality details
-  let qualityText = '';
+  // Get quality info using site-specific extraction method
+  const qualityText = extractQualityText(row, site);
   
-  // Try to find quality from a link with torrentid
-  const qualityLink = row.querySelector(site.selectors.qualityLink);
-  if (qualityLink) {
-    qualityText = qualityLink.textContent.trim();
-  }
-  
-  // If not found, try to extract from the row content
-  if (!qualityText) {
-    // Look for common quality patterns in the row text
-    const rowText = row.textContent;
-    const qualityMatch = rowText.match(/\[((?:CD|WEB|Vinyl|SACD|DVD|Blu-ray|Cassette|DAT|Soundboard)\s*\/\s*(?:FLAC|MP3)[^\]]*)\]/);
-    if (qualityMatch) {
-      qualityText = qualityMatch[1].trim();
-    } else {
-      // Try another pattern
-      const altMatch = rowText.match(/((?:FLAC|MP3)\s*\/\s*(?:24bit\s+)?(?:Lossless|320|V0|V2)[^<\]]*)/i);
-      if (altMatch) {
-        qualityText = altMatch[1].trim();
-      }
-    }
-  }
-  
-  // Extract media from quality text if not provided
+  // Extract media from quality text if not provided from edition row
   let torrentMedia = mediaSource;
-  if (!torrentMedia && qualityText) {
+  if (qualityText) {
     torrentMedia = parseMediaFromText(qualityText);
   }
   

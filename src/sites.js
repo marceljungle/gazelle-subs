@@ -1,5 +1,6 @@
 /**
  * Site Configuration - Defines site-specific selectors and settings
+ * Allows easy addition of new Gazelle sites
  */
 
 /**
@@ -20,7 +21,7 @@ export const SITES = {
       torrentPassPattern: /passkey=([a-f0-9]+)/,
       // Group row ID pattern
       groupIdPattern: /group_(\d+)/,
-      // Quality link in torrent row
+      // Quality link in torrent row - RED has it inside td with torrentid link
       qualityLink: 'td a[href*="torrentid="]',
       // Stat cells
       statCells: 'td.number_column',
@@ -51,6 +52,15 @@ export const SITES = {
       // Edition info cell
       editionInfoCell: '.edition_info',
     },
+    // How to extract quality text from torrent row
+    qualityExtraction: {
+      // Method: 'selector' uses a CSS selector, 'regex' uses regex on row text
+      method: 'selector',
+      // For 'selector' method: CSS selector to find quality link
+      selector: 'td a[href*="torrentid="]',
+      // Links to exclude (short action links)
+      excludePattern: null, // RED doesn't have this issue
+    },
     // URL patterns
     urls: {
       subscribed: '/userhistory.php?action=subscribed_collages',
@@ -72,8 +82,8 @@ export const SITES = {
       torrentPassPattern: /torrent_pass=([a-zA-Z0-9]+)/,
       // Group row ID pattern
       groupIdPattern: /group_(\d+)/,
-      // Quality link in torrent row
-      qualityLink: 'a[href*="torrentid="]',
+      // Quality link in torrent row - not used for OPS, see qualityExtraction
+      qualityLink: null,
       // Stat cells
       statCells: 'td.number_column',
       // Group info container
@@ -102,6 +112,16 @@ export const SITES = {
       torrentRowClass: 'groupid_',
       // Edition info cell
       editionInfoCell: '.edition_info',
+    },
+    // How to extract quality text from torrent row
+    qualityExtraction: {
+      // Method: 'selector' uses a CSS selector, 'regex' uses regex on row text
+      method: 'regex',
+      // For 'regex' method: Pattern to extract quality from row text
+      // OPS format: "▶ [Vinyl / FLAC / 24bit Lossless]"
+      pattern: /▶\s*\[([^\]]+)\]/,
+      // Fallback pattern if first doesn't match
+      fallbackPattern: /\[((?:CD|WEB|Vinyl|SACD|DVD|Blu-ray|Cassette|DAT|Soundboard)\s*\/\s*(?:FLAC|MP3)[^\]]*)\]/,
     },
     // URL patterns
     urls: {
