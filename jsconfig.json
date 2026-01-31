@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "jsx": "react",
+    "jsxFactory": "VM.h",
+    "jsxFragmentFactory": "VM.Fragment"
+  },
+  "include": ["src/**/*", "../node_modules/@violentmonkey/types"]
+}

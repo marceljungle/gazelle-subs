@@ -1,0 +1,70 @@
+/**
+ * XFetch - HTTP request wrapper for Tampermonkey/Greasemonkey
+ * Uses GM.xmlHttpRequest for cross-origin requests
+ */
+export const XFetch = {
+  /**
+   * Send a POST request
+   * @param {string} url - Target URL
+   * @param {string|FormData|null} data - Request body
+   * @param {Object} headers - Request headers
+   * @returns {Promise<Object>} Response wrapper
+   */
+  post: async (url, data, headers = {}) => {
+    return new Promise((resolve, reject) => {
+      GM.xmlHttpRequest({
+        method: 'POST',
+        url,
+        headers,
+        data,
+        onload: (res) => {
+          resolve({
+            json: async () => JSON.parse(res.responseText),
+            text: async () => res.responseText,
+            headers: async () =>
+              Object.fromEntries(
+                res.responseHeaders.split('\r\n').map((h) => h.split(': '))
+              ),
+            raw: res,
+            ok: res.status >= 200 && res.status < 300,
+            status: res.status,
+          });
+        },
+        onerror: (err) => reject(err),
+      });
+    });
+  },
+
+  /**
+   * Send a GET request
+   * @param {string} url - Target URL
+   * @param {Object} headers - Request headers
+   * @returns {Promise<Object>} Response wrapper
+   */
+  get: async (url, headers = {}) => {
+    return new Promise((resolve, reject) => {
+      GM.xmlHttpRequest({
+        method: 'GET',
+        url,
+        headers: {
+          Accept: 'application/json',
+          ...headers,
+        },
+        onload: (res) => {
+          resolve({
+            json: async () => JSON.parse(res.responseText),
+            text: async () => res.responseText,
+            headers: async () =>
+              Object.fromEntries(
+                res.responseHeaders.split('\r\n').map((h) => h.split(': '))
+              ),
+            raw: res,
+            ok: res.status >= 200 && res.status < 300,
+            status: res.status,
+          });
+        },
+        onerror: (err) => reject(err),
+      });
+    });
+  },
+};
