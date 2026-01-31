@@ -49,18 +49,25 @@ export function parseQuality(qualityStr) {
 }
 
 /**
+ * Get list of actual media types (excluding 'Any')
+ * @returns {string[]} Array of media type values
+ */
+function getMediaTypeValues() {
+  return Object.values(MediaTypes).filter(m => m !== MediaTypes.ANY);
+}
+
+/**
  * Extract media source from quality/edition text
  * @param {string} text - Quality or edition text
  * @returns {string} Media source
  */
 function parseMediaFromText(text) {
-  const mediaTypes = ['CD', 'WEB', 'Vinyl', 'SACD', 'DVD', 'Blu-ray', 'Cassette', 'DAT', 'Soundboard'];
-  for (const media of mediaTypes) {
+  for (const media of getMediaTypeValues()) {
     if (text.includes(media)) {
       return media;
     }
   }
-  return 'CD';
+  return MediaTypes.CD;
 }
 
 /**
@@ -217,15 +224,14 @@ function parseTorrentRow(row, mediaSource = '') {
   let torrentMedia = mediaSource || '';
   if (qualityText) {
     // Check if quality text actually contains media info before extracting
-    const mediaTypes = ['CD', 'WEB', 'Vinyl', 'SACD', 'DVD', 'Blu-ray', 'Cassette', 'DAT', 'Soundboard'];
-    const hasMediaInQuality = mediaTypes.some(media => qualityText.includes(media));
+    const hasMediaInQuality = getMediaTypeValues().some(media => qualityText.includes(media));
     if (hasMediaInQuality) {
       torrentMedia = parseMediaFromText(qualityText);
     }
   }
   // Default to CD only if no media source was found anywhere
   if (!torrentMedia) {
-    torrentMedia = 'CD';
+    torrentMedia = MediaTypes.CD;
   }
   
   // Get stats (size, snatches, seeders, leechers)
