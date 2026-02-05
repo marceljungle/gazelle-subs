@@ -74,13 +74,17 @@ function ModalContent({ panel, data, onClose }) {
     rerender();
   };
 
-  // Check if all are selected (or at least most - handles duplicate group IDs)
+  // Check if all are selected (compare unique group IDs since same release can be in multiple collages)
   const isAllSelected = () => {
-    const totalGroups = state.collages.reduce((sum, c) => sum + c.groups.length, 0);
-    // Use a threshold approach since some groups might have duplicate IDs
-    // If we've selected more than 90% of the counted groups, consider it "all selected"
-    const result = totalGroups > 0 && state.selectedGroups.size >= totalGroups * 0.9;
-    console.log('isAllSelected - totalGroups:', totalGroups, 'selectedGroups.size:', state.selectedGroups.size, 'result:', result);
+    const uniqueGroupIds = new Set();
+    for (const collage of state.collages) {
+      for (const group of collage.groups) {
+        uniqueGroupIds.add(group.id);
+      }
+    }
+    const totalUniqueGroups = uniqueGroupIds.size;
+    const result = totalUniqueGroups > 0 && state.selectedGroups.size === totalUniqueGroups;
+    console.log('isAllSelected - uniqueGroups:', totalUniqueGroups, 'selectedGroups.size:', state.selectedGroups.size, 'result:', result);
     return result;
   };
 
