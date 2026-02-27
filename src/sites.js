@@ -66,6 +66,11 @@ export const SITES = {
       subscribed: '/userhistory.php?action=subscribed_collages',
       catchup: '/userhistory.php?action=catchup_collages',
     },
+    // Rate limiting: max requests per time window
+    rateLimit: {
+      maxRequests: 10,
+      windowMs: 10000, // 10 seconds
+    },
   },
   
   'orpheus.network': {
@@ -127,6 +132,11 @@ export const SITES = {
     urls: {
       subscribed: '/userhistory.php?action=subscribed_collages',
       catchup: '/userhistory.php?action=catchup_collages',
+    },
+    // Rate limiting: max requests per time window
+    rateLimit: {
+      maxRequests: 5,
+      windowMs: 10000, // 10 seconds
     },
   },
 };

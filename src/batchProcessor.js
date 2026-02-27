@@ -1,5 +1,39 @@
 import { filterTorrentByQuality, catchupCollage, MediaTypes } from './collageParser';
 import { profileManager } from './profileManager';
+import { getCurrentSite } from './sites';
+
+/**
+ * Rate limiter - enforces per-site request limits using a sliding window
+ */
+class RateLimiter {
+  constructor(maxRequests, windowMs) {
+    this.maxRequests = maxRequests;
+    this.windowMs = windowMs;
+    this.timestamps = [];
+  }
+
+  /**
+   * Wait until a request is allowed, then record it
+   */
+  async acquire() {
+    const now = Date.now();
+    // Remove timestamps outside the current window
+    this.timestamps = this.timestamps.filter(t => now - t < this.windowMs);
+
+    if (this.timestamps.length >= this.maxRequests) {
+      // Wait until the oldest timestamp expires from the window
+      const waitTime = this.timestamps[0] + this.windowMs - now;
+      if (waitTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+      // Clean up again after waiting
+      const afterWait = Date.now();
+      this.timestamps = this.timestamps.filter(t => afterWait - t < this.windowMs);
+    }
+
+    this.timestamps.push(Date.now());
+  }
+}
 
 /**
  * Batch processor for adding torrents to client
@@ -13,6 +47,7 @@ export class BatchProcessor {
     this.onUpdate = null;
     this.isProcessing = false;
     this.delay = 500; // Delay between requests in ms
+    this.rateLimiter = null;
   }
 
   /**
@@ -87,6 +122,15 @@ export class BatchProcessor {
       return results;
     }
 
+    // Initialize rate limiter from site config
+    const site = getCurrentSite();
+    if (site?.rateLimit) {
+      this.rateLimiter = new RateLimiter(site.rateLimit.maxRequests, site.rateLimit.windowMs);
+      this.log(`⏱️ Rate limit: ${site.rateLimit.maxRequests} req / ${site.rateLimit.windowMs / 1000}s (${site.name})`, 'info');
+    } else {
+      this.rateLimiter = null;
+    }
+
     // Gather all groups to process
     const groupsToProcess = [];
     const collagesWithSelectedGroups = new Map();
@@ -150,6 +194,11 @@ export class BatchProcessor {
       }
 
       try {
+        // Respect rate limit before making request
+        if (this.rateLimiter) {
+          await this.rateLimiter.acquire();
+        }
+
         // Add torrent to client
         this.log(`📥 Adding: ${this.current} (${torrent.quality})`, 'info');
         await profile.addTorrent(torrent.downloadUrl);
@@ -180,6 +229,10 @@ export class BatchProcessor {
       
       for (const collage of collagesToCatchup) {
         try {
+          // Respect rate limit for catchup requests too
+          if (this.rateLimiter) {
+            await this.rateLimiter.acquire();
+          }
           await catchupCollage(collage.id, authKey);
           this.log(`✅ Cleared notifications for: ${collage.name}`, 'success');
           results.catchedUp.push(collage);
@@ -218,6 +271,7 @@ export class BatchProcessor {
     this.total = 0;
     this.current = '';
     this.isProcessing = false;
+    this.rateLimiter = null;
     this.emitUpdate();
   }
 }
