@@ -15,7 +15,7 @@ function ModalContent({ panel, data, onClose }) {
   let state = {
     collages: data.collages.map(c => ({ ...c, catchup: false })), // Add catchup flag to each collage (off by default)
     selectedGroups: new Set(),
-    quality: QualityTypes.FLAC,
+    quality: QualityTypes.ANY,
     media: MediaTypes.ANY,
     preferMostSeeded: false,
     preferMostSnatched: false,
@@ -31,12 +31,24 @@ function ModalContent({ panel, data, onClose }) {
 
   const shadow = panel.root;
 
-  // Helper to re-render
+  // Helper to re-render (preserves scroll position)
   const rerender = () => {
     const content = shadow.querySelector('[data-modal-content]');
     if (content) {
+      // Save scroll position of the collages container before re-render
+      const collagesContainer = content.querySelector(`.${styles['collages-container']}`);
+      const scrollTop = collagesContainer ? collagesContainer.scrollTop : 0;
+
       content.innerHTML = '';
       content.appendChild(VM.m(renderContent()));
+
+      // Restore scroll position after re-render
+      if (scrollTop > 0) {
+        const newContainer = content.querySelector(`.${styles['collages-container']}`);
+        if (newContainer) {
+          newContainer.scrollTop = scrollTop;
+        }
+      }
     }
   };
 
@@ -347,20 +359,21 @@ export function createTriggerButton(newCount) {
       right: 20px;
       z-index: 9999;
       padding: 12px 20px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: #fff;
-      border: none;
+      background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+      color: #e0e0e0;
+      border: 1px solid #444;
       border-radius: 8px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
       transition: all 0.2s;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
     .gazelle-subs-trigger:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+      border-color: #666;
     }
     .trigger-badge {
       position: absolute;
