@@ -2,9 +2,6 @@ import { filterTorrentByQuality, catchupCollage, MediaTypes } from './collagePar
 import { profileManager } from './profileManager';
 import { getCurrentSite } from './sites';
 
-/**
- * Rate limiter - enforces per-site request limits using a sliding window
- */
 class RateLimiter {
   constructor(maxRequests, windowMs) {
     this.maxRequests = maxRequests;
