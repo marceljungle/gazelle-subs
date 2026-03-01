@@ -95,14 +95,12 @@ function ModalContent({ panel, data, onClose }) {
     }
     const totalUniqueGroups = uniqueGroupIds.size;
     const result = totalUniqueGroups > 0 && state.selectedGroups.size === totalUniqueGroups;
-    console.log('isAllSelected - uniqueGroups:', totalUniqueGroups, 'selectedGroups.size:', state.selectedGroups.size, 'result:', result);
     return result;
   };
 
   // Select/deselect all
   const toggleSelectAll = () => {
     const shouldSelect = !isAllSelected();
-    console.log('toggleSelectAll - shouldSelect:', shouldSelect);
     if (shouldSelect) {
       for (const collage of state.collages) {
         for (const group of collage.groups) {
@@ -112,7 +110,6 @@ function ModalContent({ panel, data, onClose }) {
     } else {
       state.selectedGroups.clear();
     }
-    console.log('selectedGroups size:', state.selectedGroups.size);
     rerender();
   };
 

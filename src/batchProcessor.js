@@ -2,6 +2,21 @@ import { filterTorrentByQuality, catchupCollage, MediaTypes } from './collagePar
 import { profileManager } from './profileManager';
 import { getCurrentSite } from './sites';
 
+// Delay that works reliably in background tabs.
+// Uses a short polling loop so that even if the browser
+// throttles individual setTimeout calls to ~1s, the total
+// wait still resolves as soon as the target time is reached.
+function reliableDelay(ms) {
+  return new Promise(resolve => {
+    const target = Date.now() + ms;
+    const tick = () => {
+      if (Date.now() >= target) resolve();
+      else setTimeout(tick, 50);
+    };
+    setTimeout(tick, Math.min(ms, 50));
+  });
+}
+
 class RateLimiter {
   constructor(maxRequests, windowMs) {
     this.maxRequests = maxRequests;
@@ -18,7 +33,7 @@ class RateLimiter {
       // Wait until the oldest timestamp expires from the window
       const waitTime = this.timestamps[0] + this.windowMs - now;
       if (waitTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, waitTime));
+        await reliableDelay(waitTime);
       }
       // Clean up again after waiting
       const afterWait = Date.now();
@@ -63,7 +78,7 @@ export class BatchProcessor {
   }
 
   sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return reliableDelay(ms);
   }
 
   async process({
