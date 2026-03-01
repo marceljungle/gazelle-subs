@@ -130,11 +130,12 @@ export function ControlsPanel({
   onSelectAllToggle,
   allClearing,
   onClearAllToggle,
+  showCatchup = true,
 }) {
   return (
     <div className={styles['modal-controls']}>
       <SelectAllOption allSelected={allSelected} onToggle={onSelectAllToggle} />
-      <ClearAllOption allClearing={allClearing} onToggle={onClearAllToggle} />
+      {showCatchup && <ClearAllOption allClearing={allClearing} onToggle={onClearAllToggle} />}
       <QualityFilter value={quality} onChange={onQualityChange} />
       <MediaFilter value={media} onChange={onMediaChange} />
       <PreferencesSelector

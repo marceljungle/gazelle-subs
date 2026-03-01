@@ -1,8 +1,5 @@
 import { testClient, addTorrent, getCategories } from './clientUtils';
 
-/**
- * Profile class representing a torrent client configuration
- */
 class Profile {
   constructor(
     id,
@@ -24,19 +21,11 @@ class Profile {
     this.category = category;
   }
 
-  /**
-   * Get available categories from the torrent client
-   * @returns {Promise<string[]>} List of category names
-   */
   async getCategories() {
     if (this.client !== 'qbit') return [];
     return await getCategories(this.host, this.username, this.password);
   }
 
-  /**
-   * Test connection to the torrent client
-   * @returns {Promise<boolean>} True if connection successful
-   */
   async testConnection() {
     return await testClient(
       this.host,
@@ -46,11 +35,6 @@ class Profile {
     );
   }
 
-  /**
-   * Add a torrent to this profile's client
-   * @param {string} torrentUri - Torrent download URL
-   * @returns {Promise<boolean>} True if added successfully
-   */
   async addTorrent(torrentUri) {
     return await addTorrent(
       torrentUri,
@@ -63,10 +47,6 @@ class Profile {
     );
   }
 
-  /**
-   * Serialize profile for storage
-   * @returns {Object} Plain object representation
-   */
   toJSON() {
     return {
       id: this.id,
@@ -81,34 +61,20 @@ class Profile {
   }
 }
 
-/**
- * Profile Manager - handles storage and retrieval of profiles
- */
 export const profileManager = {
   profiles: [],
   selectedProfile: null,
+  apiTokens: {},
+  collageWidgetEnabled: false,
 
-  /**
-   * Add a new profile
-   * @param {Profile} profile - Profile to add
-   */
   addProfile(profile) {
     this.profiles.push(profile);
   },
 
-  /**
-   * Remove a profile by ID
-   * @param {number} id - Profile ID to remove
-   */
   removeProfile(id) {
     this.profiles = this.profiles.filter((p) => p.id !== id);
   },
 
-  /**
-   * Get a profile by ID
-   * @param {number} id - Profile ID
-   * @returns {Profile} The profile or a new empty profile
-   */
   getProfile(id) {
     return (
       this.profiles.find((p) => Number(p.id) === Number(id)) ??
@@ -116,18 +82,10 @@ export const profileManager = {
     );
   },
 
-  /**
-   * Get all profiles
-   * @returns {Profile[]} List of all profiles
-   */
   getProfiles() {
     return this.profiles;
   },
 
-  /**
-   * Set the currently selected profile
-   * @param {number} id - Profile ID to select
-   */
   setSelectedProfile(id) {
     this.selectedProfile = this.getProfile(id);
     window.dispatchEvent(
@@ -135,10 +93,6 @@ export const profileManager = {
     );
   },
 
-  /**
-   * Update or add a profile
-   * @param {Profile} profile - Profile to set
-   */
   setProfile(profile) {
     const existingIndex = this.profiles.findIndex((p) => Number(p.id) === Number(profile.id));
     if (existingIndex === -1) {
@@ -152,10 +106,6 @@ export const profileManager = {
     }
   },
 
-  /**
-   * Get the next available profile ID
-   * @returns {number} Next available ID
-   */
   getNextId() {
     if (this.profiles.length === 0) return 0;
     return (
@@ -163,19 +113,15 @@ export const profileManager = {
     );
   },
 
-  /**
-   * Save profiles to storage
-   */
   async save() {
     await GM.setValue('gazellesubs_profiles', JSON.stringify(this.profiles));
     if (this.selectedProfile) {
       await GM.setValue('gazellesubs_selectedProfile', this.selectedProfile.id);
     }
+    await GM.setValue('gazellesubs_apiTokens', JSON.stringify(this.apiTokens));
+    await GM.setValue('gazellesubs_collageWidget', this.collageWidgetEnabled);
   },
 
-  /**
-   * Load profiles from storage
-   */
   async load() {
     const profilesData = await GM.getValue('gazellesubs_profiles');
     if (profilesData) {
@@ -203,13 +149,24 @@ export const profileManager = {
       // Create a default profile if none exist
       this.selectedProfile = new Profile(0, 'New Profile', '', '', '', 'none', '', '');
     }
+
+    // Load additional settings
+    const tokensData = await GM.getValue('gazellesubs_apiTokens');
+    if (tokensData) {
+      try { this.apiTokens = JSON.parse(tokensData); } catch { this.apiTokens = {}; }
+    }
+    const widgetEnabled = await GM.getValue('gazellesubs_collageWidget');
+    this.collageWidgetEnabled = widgetEnabled === true;
   },
 
-  /**
-   * Create a new Profile instance
-   * @param {Object} data - Profile data
-   * @returns {Profile} New profile instance
-   */
+  getApiToken(siteId) {
+    return this.apiTokens[siteId] || '';
+  },
+
+  setApiToken(siteId, token) {
+    this.apiTokens[siteId] = token;
+  },
+
   createProfile(data) {
     return new Profile(
       data.id ?? this.getNextId(),

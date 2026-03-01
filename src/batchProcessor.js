@@ -9,9 +9,6 @@ class RateLimiter {
     this.timestamps = [];
   }
 
-  /**
-   * Wait until a request is allowed, then record it
-   */
   async acquire() {
     const now = Date.now();
     // Remove timestamps outside the current window
@@ -32,9 +29,6 @@ class RateLimiter {
   }
 }
 
-/**
- * Batch processor for adding torrents to client
- */
 export class BatchProcessor {
   constructor() {
     this.logs = [];
@@ -47,11 +41,6 @@ export class BatchProcessor {
     this.rateLimiter = null;
   }
 
-  /**
-   * Add a log entry
-   * @param {string} message - Log message
-   * @param {string} type - Log type (success, error, warning)
-   */
   log(message, type = 'info') {
     this.logs.unshift({ message, type, time: new Date() });
     // Keep only last 50 logs
@@ -61,9 +50,6 @@ export class BatchProcessor {
     this.emitUpdate();
   }
 
-  /**
-   * Emit update to listeners
-   */
   emitUpdate() {
     if (this.onUpdate) {
       this.onUpdate({
@@ -76,19 +62,10 @@ export class BatchProcessor {
     }
   }
 
-  /**
-   * Sleep for specified milliseconds
-   * @param {number} ms - Milliseconds to sleep
-   */
   sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  /**
-   * Process selected groups and add torrents to client
-   * @param {Object} options - Processing options
-   * @returns {Promise<Object>} Results summary
-   */
   async process({
     collages,
     selectedGroups,
@@ -259,9 +236,6 @@ export class BatchProcessor {
     return results;
   }
 
-  /**
-   * Reset the processor state
-   */
   reset() {
     this.logs = [];
     this.progress = 0;

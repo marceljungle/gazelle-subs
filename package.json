@@ -1,6 +1,6 @@
 {
   "name": "gazelle-subs",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Batch download subscribed collages from Gazelle-based music trackers",
   "author": "marceljungle",
   "license": "MIT",

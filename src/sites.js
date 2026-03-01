@@ -1,11 +1,3 @@
-/**
- * Site Configuration - Defines site-specific selectors and settings
- * Allows easy addition of new Gazelle sites
- */
-
-/**
- * Site configuration registry
- */
 export const SITES = {
   'redacted.sh': {
     id: 'red',
@@ -70,6 +62,14 @@ export const SITES = {
     rateLimit: {
       maxRequests: 10,
       windowMs: 10000, // 10 seconds
+    },
+    // API configuration
+    api: {
+      baseEndpoint: 'ajax.php',
+      collageAction: 'collage',
+      // How to build download URLs from API data
+      downloadUrlPattern: (torrentId, authKey, passKey) =>
+        `${location.origin}/torrents.php?action=download&id=${torrentId}&authkey=${authKey}&torrent_pass=${passKey}`,
     },
   },
   
@@ -138,30 +138,26 @@ export const SITES = {
       maxRequests: 5,
       windowMs: 10000, // 10 seconds
     },
+    // API configuration
+    api: {
+      baseEndpoint: 'ajax.php',
+      collageAction: 'collage',
+      // How to build download URLs from API data
+      downloadUrlPattern: (torrentId, authKey, passKey) =>
+        `${location.origin}/torrents.php?action=download&id=${torrentId}&authkey=${authKey}&torrent_pass=${passKey}`,
+    },
   },
 };
 
-/**
- * Get the current site configuration based on hostname
- * @returns {Object|null} Site configuration or null if not supported
- */
 export function getCurrentSite() {
   const hostname = window.location.hostname;
   return SITES[hostname] || null;
 }
 
-/**
- * Check if current site is supported
- * @returns {boolean}
- */
 export function isSupportedSite() {
   return getCurrentSite() !== null;
 }
 
-/**
- * Get site name for display
- * @returns {string}
- */
 export function getSiteName() {
   const site = getCurrentSite();
   return site?.name || 'Unknown';

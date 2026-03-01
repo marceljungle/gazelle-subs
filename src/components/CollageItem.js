@@ -97,6 +97,7 @@ export function CollageItem({
   onToggleGroup, 
   onToggleExpand,
   onToggleCatchup,
+  showCatchup = true,
 }) {
   const isCollageSelected = collage.groups.every(g => selectedGroups.has(g.id));
   const isPartiallySelected = collage.groups.some(g => selectedGroups.has(g.id)) && !isCollageSelected;
@@ -135,18 +136,20 @@ export function CollageItem({
         <span className={styles['collage-count']}>
           {collage.groups.length} release{collage.groups.length > 1 ? 's' : ''}
         </span>
-        <label 
-          className={styles['collage-catchup']} 
-          onclick={(e) => e.stopPropagation()}
-          title="Clear notifications for this collage after adding"
-        >
-          <input
-            type="checkbox"
-            checked={collage.catchup !== false}
-            onclick={handleCatchupToggle}
-          />
-          <span>🧹</span>
-        </label>
+        {showCatchup && (
+          <label 
+            className={styles['collage-catchup']} 
+            onclick={(e) => e.stopPropagation()}
+            title="Clear notifications for this collage after adding"
+          >
+            <input
+              type="checkbox"
+              checked={collage.catchup !== false}
+              onclick={handleCatchupToggle}
+            />
+            <span>🧹</span>
+          </label>
+        )}
       </div>
       <div className={`${styles['groups-container']} ${collage.expanded ? styles.expanded : ''}`}>
         {collage.groups.map(group => (
@@ -172,6 +175,7 @@ export function CollagesList({
   onToggleGroup, 
   onToggleExpand,
   onToggleCatchup,
+  showCatchup = true,
 }) {
   if (collages.length === 0) {
     return (
@@ -193,6 +197,7 @@ export function CollagesList({
           onToggleGroup={onToggleGroup}
           onToggleExpand={onToggleExpand}
           onToggleCatchup={onToggleCatchup}
+          showCatchup={showCatchup}
         />
       ))}
     </>
