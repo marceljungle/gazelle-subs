@@ -1,13 +1,5 @@
-/**
- * Collage Parser - Parses the subscribed collages page HTML
- * Supports multiple Gazelle sites (RED, OPS, etc.)
- */
-
 import { getCurrentSite, getSiteName } from './sites';
 
-/**
- * Quality type definitions
- */
 export const QualityTypes = {
   FLAC_24: 'FLAC / 24bit Lossless',
   FLAC: 'FLAC / Lossless',
@@ -17,9 +9,6 @@ export const QualityTypes = {
   ANY: 'Any',
 };
 
-/**
- * Media source type definitions
- */
 export const MediaTypes = {
   CD: 'CD',
   WEB: 'WEB',
@@ -33,11 +22,6 @@ export const MediaTypes = {
   ANY: 'Any',
 };
 
-/**
- * Parse quality string to identify format
- * @param {string} qualityStr - Quality string from torrent
- * @returns {string} Normalized quality type
- */
 export function parseQuality(qualityStr) {
   const str = qualityStr.toLowerCase();
   if (str.includes('24bit') || str.includes('24 bit')) return QualityTypes.FLAC_24;
@@ -48,19 +32,10 @@ export function parseQuality(qualityStr) {
   return qualityStr;
 }
 
-/**
- * Get list of actual media types (excluding 'Any')
- * @returns {string[]} Array of media type values
- */
 function getMediaTypeValues() {
   return Object.values(MediaTypes).filter(m => m !== MediaTypes.ANY);
 }
 
-/**
- * Extract media source from quality/edition text
- * @param {string} text - Quality or edition text
- * @returns {string} Media source
- */
 function parseMediaFromText(text) {
   for (const media of getMediaTypeValues()) {
     if (text.includes(media)) {
@@ -70,10 +45,6 @@ function parseMediaFromText(text) {
   return MediaTypes.CD;
 }
 
-/**
- * Extract auth key from the page
- * @returns {string|null} Auth key
- */
 export function getAuthKey() {
   const site = getCurrentSite();
   
@@ -107,28 +78,36 @@ export function getAuthKey() {
   return null;
 }
 
-/**
- * Extract torrent pass from the page
- * @returns {string|null} Torrent pass
- */
 export function getTorrentPass() {
   const site = getCurrentSite();
   if (!site) return null;
   
+  // Method 1: Try download links (works on pages with torrent tables)
   const downloadLink = document.querySelector('a[href*="torrent_pass="], a[href*="passkey="]');
   if (downloadLink) {
     const match = downloadLink.href.match(site.selectors.torrentPassPattern);
     if (match) return match[1];
   }
+
+  // Method 2: Try feed <link> elements (works on all pages - both RED and OPS have passkey in feed URLs)
+  const feedLink = document.querySelector('link[rel="alternate"][href*="passkey="]');
+  if (feedLink) {
+    const match = feedLink.href.match(/passkey=([a-zA-Z0-9_-]+)/);
+    if (match) return match[1];
+  }
+
+  // Method 3: Try global USER object (RED exposes USER.auth.passkey)
+  try {
+    if (typeof USER !== 'undefined' && USER?.auth?.passkey) {
+      return USER.auth.passkey;
+    }
+  } catch (e) {
+    // USER may not be defined or accessible
+  }
+
   return null;
 }
 
-/**
- * Extract quality text from a torrent row using site-specific configuration
- * @param {Element} row - Torrent row element
- * @param {Object} site - Site configuration
- * @returns {string} Quality text
- */
 function extractQualityText(row, site) {
   const extraction = site.qualityExtraction;
   
@@ -168,11 +147,6 @@ function extractQualityText(row, site) {
   return extractQualityFallback(row);
 }
 
-/**
- * Generic fallback for quality extraction
- * @param {Element} row - Torrent row element
- * @returns {string} Quality text
- */
 function extractQualityFallback(row) {
   const rowText = row.textContent;
   
@@ -187,12 +161,6 @@ function extractQualityFallback(row) {
   return '';
 }
 
-/**
- * Parse a single torrent row
- * @param {Element} row - Torrent row element
- * @param {string} mediaSource - Media source from edition row
- * @returns {Object|null} Torrent info
- */
 function parseTorrentRow(row, mediaSource = '') {
   const site = getCurrentSite();
   if (!site) return null;
@@ -260,12 +228,6 @@ function parseTorrentRow(row, mediaSource = '') {
   };
 }
 
-/**
- * Parse a torrent group
- * @param {Element} groupRow - Group row element
- * @param {Element} table - Parent table element
- * @returns {Object|null} Group info with torrents
- */
 function parseGroup(groupRow, table) {
   const site = getCurrentSite();
   if (!site) return null;
@@ -353,11 +315,6 @@ function parseGroup(groupRow, table) {
   };
 }
 
-/**
- * Parse a collage section
- * @param {Element} collageTable - Collage header table
- * @returns {Object|null} Collage info with groups
- */
 function parseCollage(collageTable) {
   const site = getCurrentSite();
   if (!site) return null;
@@ -408,10 +365,6 @@ function parseCollage(collageTable) {
   };
 }
 
-/**
- * Parse all subscribed collages from the page
- * @returns {Object} Parsed data including collages, auth info
- */
 export function parseSubscribedCollages() {
   const site = getCurrentSite();
   const siteName = getSiteName();
@@ -470,15 +423,6 @@ export function parseSubscribedCollages() {
   };
 }
 
-/**
- * Filter torrents by quality and media preference
- * @param {Array} torrents - List of torrents
- * @param {string} quality - Desired quality
- * @param {string} media - Desired media source
- * @param {boolean} preferMostSeeded - Sort by seeders
- * @param {boolean} preferMostSnatched - Sort by snatches
- * @returns {Object|null} Best matching torrent or null
- */
 export function filterTorrentByQuality(torrents, quality, media = MediaTypes.ANY, preferMostSeeded = false, preferMostSnatched = false) {
   if (!torrents || torrents.length === 0) return null;
   
@@ -506,22 +450,10 @@ export function filterTorrentByQuality(torrents, quality, media = MediaTypes.ANY
   return filtered[0];
 }
 
-/**
- * Generate catch-up URL for a collage
- * @param {string} collageId - Collage ID
- * @param {string} authKey - Auth key
- * @returns {string} Catch-up URL
- */
 export function getCatchupUrl(collageId, authKey) {
   return `${location.origin}/userhistory.php?action=catchup_collages&auth=${authKey}&collageid=${collageId}`;
 }
 
-/**
- * Execute catch-up for a collage
- * @param {string} collageId - Collage ID
- * @param {string} authKey - Auth key
- * @returns {Promise<boolean>} Success status
- */
 export async function catchupCollage(collageId, authKey) {
   try {
     const url = getCatchupUrl(collageId, authKey);

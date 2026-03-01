@@ -1,13 +1,8 @@
 import { profileManager } from './profileManager';
 import { parseSubscribedCollages } from './collageParser';
-import { openModal, createTriggerButton } from './modal';
+import { openModal, createTriggerButton, openCollageViewModal, createCollageViewButton, openSettingsDialog } from './modal';
+import { isCollageViewPage, getCollageIdFromUrl } from './collageApi';
 import { isSupportedSite, getSiteName } from './sites';
-
-/**
- * GazelleSubs - Batch download subscribed collages from Gazelle-based trackers
- * 
- * Main entry point for the userscript
- */
 
 // Check if we're on the subscribed collages page
 function isSubscribedCollagesPage() {
@@ -26,29 +21,48 @@ async function init() {
     return;
   }
 
-  // Load saved profiles
+  // Load saved profiles and settings
   await profileManager.load();
   console.log('[GazelleSubs] Profiles loaded:', profileManager.profiles.length);
+  console.log('[GazelleSubs] Collage widget enabled:', profileManager.collageWidgetEnabled);
 
-  // Only run on subscribed collages page
-  if (!isSubscribedCollagesPage()) {
-    console.log('[GazelleSubs] Not on subscribed collages page, skipping...');
+  // Always register the settings menu command
+  GM.registerMenuCommand('⚙️ Collage Batch Download Settings', openSettingsDialog);
+
+  // Subscribed collages page - original functionality
+  if (isSubscribedCollagesPage()) {
+    console.log(`[GazelleSubs] On ${siteName} subscribed collages page, setting up UI...`);
+
+    // Parse page to get count
+    const data = parseSubscribedCollages();
+    const totalNewItems = data.collages.reduce((sum, c) => sum + c.groups.length, 0);
+    
+    console.log(`[GazelleSubs] Found ${data.collages.length} collages with ${totalNewItems} new releases`);
+
+    // Create trigger button
+    createTriggerButton(totalNewItems);
+
+    // Register menu command
+    GM.registerMenuCommand('🎵 Open Batch Download', openModal);
     return;
   }
 
-  console.log(`[GazelleSubs] On ${siteName} subscribed collages page, setting up UI...`);
+  // Collage view page - new widget functionality
+  if (isCollageViewPage() && profileManager.collageWidgetEnabled) {
+    const collageId = getCollageIdFromUrl();
+    if (!collageId) return;
 
-  // Parse page to get count
-  const data = parseSubscribedCollages();
-  const totalNewItems = data.collages.reduce((sum, c) => sum + c.groups.length, 0);
-  
-  console.log(`[GazelleSubs] Found ${data.collages.length} collages with ${totalNewItems} new releases`);
+    console.log(`[GazelleSubs] On ${siteName} collage page (id=${collageId}), setting up collage view widget...`);
 
-  // Create trigger button
-  createTriggerButton(totalNewItems);
+    // Create the trigger button for collage view
+    createCollageViewButton(collageId);
 
-  // Register menu command
-  GM.registerMenuCommand('🎵 Open Batch Download', openModal);
+    // Register menu command for collage view
+    GM.registerMenuCommand('🎵 Open Batch Download', () => openCollageViewModal(collageId));
+    return;
+  }
+
+  console.log('[GazelleSubs] Not on a supported page, skipping UI setup.');
 }
 
 // Run initialization

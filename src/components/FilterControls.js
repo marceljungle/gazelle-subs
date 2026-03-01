@@ -1,9 +1,6 @@
 import styles from '../styles.module.css';
 import { QualityTypes, MediaTypes } from '../collageParser';
 
-/**
- * Quality Filter Component - Dropdown for quality selection
- */
 export function QualityFilter({ value, onChange }) {
   return (
     <div className={styles['control-group']}>
@@ -20,9 +17,6 @@ export function QualityFilter({ value, onChange }) {
   );
 }
 
-/**
- * Media Source Filter Component - Dropdown for media source selection
- */
 export function MediaFilter({ value, onChange }) {
   return (
     <div className={styles['control-group']}>
@@ -41,9 +35,6 @@ export function MediaFilter({ value, onChange }) {
   );
 }
 
-/**
- * Preferences Component - Checkboxes for sorting preferences
- */
 export function PreferencesSelector({ 
   preferMostSeeded, 
   preferMostSnatched, 
@@ -80,9 +71,6 @@ export function PreferencesSelector({
   );
 }
 
-/**
- * Select All Component - Checkbox to select/deselect all
- */
 export function SelectAllOption({ allSelected, onToggle }) {
   return (
     <div className={styles['checkbox-group']}>
@@ -97,9 +85,6 @@ export function SelectAllOption({ allSelected, onToggle }) {
   );
 }
 
-/**
- * Clear All Notifications Component - Checkbox to toggle all catchup flags
- */
 export function ClearAllOption({ allClearing, onToggle }) {
   return (
     <div className={styles['checkbox-group']}>
@@ -114,9 +99,6 @@ export function ClearAllOption({ allClearing, onToggle }) {
   );
 }
 
-/**
- * Controls Panel Component - Contains all filter options
- */
 export function ControlsPanel({
   quality,
   onQualityChange,
@@ -130,11 +112,12 @@ export function ControlsPanel({
   onSelectAllToggle,
   allClearing,
   onClearAllToggle,
+  showCatchup = true,
 }) {
   return (
     <div className={styles['modal-controls']}>
       <SelectAllOption allSelected={allSelected} onToggle={onSelectAllToggle} />
-      <ClearAllOption allClearing={allClearing} onToggle={onClearAllToggle} />
+      {showCatchup && <ClearAllOption allClearing={allClearing} onToggle={onClearAllToggle} />}
       <QualityFilter value={quality} onChange={onQualityChange} />
       <MediaFilter value={media} onChange={onMediaChange} />
       <PreferencesSelector

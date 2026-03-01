@@ -2,10 +2,6 @@ import styles from '../styles.module.css';
 import { profileManager } from '../profileManager';
 import { testClient, detectClient } from '../clientUtils';
 
-/**
- * Profile Form Component - Form for editing profile settings
- * Uses a unique formKey to force re-render when profile data changes
- */
 function ProfileForm({ profile, shadow, onSave, onDelete, formKey }) {
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -110,9 +106,6 @@ function ProfileForm({ profile, shadow, onSave, onDelete, formKey }) {
   );
 }
 
-/**
- * Profile Selector Component - Dropdown and form for profile management
- */
 export function ProfileSelector({ shadow, onProfileChange }) {
   const profiles = profileManager.getProfiles();
   const selectedProfile = profileManager.selectedProfile;
@@ -166,32 +159,34 @@ export function ProfileSelector({ shadow, onProfileChange }) {
   };
 
   return (
-    <div className={styles['profile-section']}>
-      <div className={styles['profile-header']}>
-        <span className={styles['profile-title']}>🔧 Client Profile</span>
-        <select 
-          className={styles['control-group']}
-          value={selectedProfile?.id ?? ''}
-          onChange={handleProfileSelect}
-          style="margin: 0; padding: 6px 12px;"
-        >
-          {profiles.map(p => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-          <option value={-1}>+ New Profile</option>
-        </select>
+    <div>
+      <div className={styles['profile-section']}>
+        <div className={styles['profile-header']}>
+          <span className={styles['profile-title']}>🔧 Client Profile</span>
+          <select 
+            className={styles['control-group']}
+            value={selectedProfile?.id ?? ''}
+            onChange={handleProfileSelect}
+            style="margin: 0; padding: 6px 12px;"
+          >
+            {profiles.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+            <option value={-1}>+ New Profile</option>
+          </select>
+        </div>
+        
+        {selectedProfile && (
+          <ProfileForm
+            key={formKey}
+            formKey={formKey}
+            profile={selectedProfile}
+            shadow={shadow}
+            onSave={handleSave}
+            onDelete={handleDelete}
+          />
+        )}
       </div>
-      
-      {selectedProfile && (
-        <ProfileForm
-          key={formKey}
-          formKey={formKey}
-          profile={selectedProfile}
-          shadow={shadow}
-          onSave={handleSave}
-          onDelete={handleDelete}
-        />
-      )}
     </div>
   );
 }

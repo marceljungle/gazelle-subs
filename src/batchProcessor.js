@@ -1,9 +1,49 @@
 import { filterTorrentByQuality, catchupCollage, MediaTypes } from './collageParser';
 import { profileManager } from './profileManager';
+import { getCurrentSite } from './sites';
 
-/**
- * Batch processor for adding torrents to client
- */
+// Delay that works reliably in background tabs.
+// Uses a short polling loop so that even if the browser
+// throttles individual setTimeout calls to ~1s, the total
+// wait still resolves as soon as the target time is reached.
+function reliableDelay(ms) {
+  return new Promise(resolve => {
+    const target = Date.now() + ms;
+    const tick = () => {
+      if (Date.now() >= target) resolve();
+      else setTimeout(tick, 50);
+    };
+    setTimeout(tick, Math.min(ms, 50));
+  });
+}
+
+class RateLimiter {
+  constructor(maxRequests, windowMs) {
+    this.maxRequests = maxRequests;
+    this.windowMs = windowMs;
+    this.timestamps = [];
+  }
+
+  async acquire() {
+    const now = Date.now();
+    // Remove timestamps outside the current window
+    this.timestamps = this.timestamps.filter(t => now - t < this.windowMs);
+
+    if (this.timestamps.length >= this.maxRequests) {
+      // Wait until the oldest timestamp expires from the window
+      const waitTime = this.timestamps[0] + this.windowMs - now;
+      if (waitTime > 0) {
+        await reliableDelay(waitTime);
+      }
+      // Clean up again after waiting
+      const afterWait = Date.now();
+      this.timestamps = this.timestamps.filter(t => afterWait - t < this.windowMs);
+    }
+
+    this.timestamps.push(Date.now());
+  }
+}
+
 export class BatchProcessor {
   constructor() {
     this.logs = [];
@@ -13,13 +53,9 @@ export class BatchProcessor {
     this.onUpdate = null;
     this.isProcessing = false;
     this.delay = 500; // Delay between requests in ms
+    this.rateLimiter = null;
   }
 
-  /**
-   * Add a log entry
-   * @param {string} message - Log message
-   * @param {string} type - Log type (success, error, warning)
-   */
   log(message, type = 'info') {
     this.logs.unshift({ message, type, time: new Date() });
     // Keep only last 50 logs
@@ -29,9 +65,6 @@ export class BatchProcessor {
     this.emitUpdate();
   }
 
-  /**
-   * Emit update to listeners
-   */
   emitUpdate() {
     if (this.onUpdate) {
       this.onUpdate({
@@ -44,19 +77,10 @@ export class BatchProcessor {
     }
   }
 
-  /**
-   * Sleep for specified milliseconds
-   * @param {number} ms - Milliseconds to sleep
-   */
   sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return reliableDelay(ms);
   }
 
-  /**
-   * Process selected groups and add torrents to client
-   * @param {Object} options - Processing options
-   * @returns {Promise<Object>} Results summary
-   */
   async process({
     collages,
     selectedGroups,
@@ -85,6 +109,15 @@ export class BatchProcessor {
       this.isProcessing = false;
       this.emitUpdate();
       return results;
+    }
+
+    // Initialize rate limiter from site config
+    const site = getCurrentSite();
+    if (site?.rateLimit) {
+      this.rateLimiter = new RateLimiter(site.rateLimit.maxRequests, site.rateLimit.windowMs);
+      this.log(`⏱️ Rate limit: ${site.rateLimit.maxRequests} req / ${site.rateLimit.windowMs / 1000}s (${site.name})`, 'info');
+    } else {
+      this.rateLimiter = null;
     }
 
     // Gather all groups to process
@@ -150,6 +183,11 @@ export class BatchProcessor {
       }
 
       try {
+        // Respect rate limit before making request
+        if (this.rateLimiter) {
+          await this.rateLimiter.acquire();
+        }
+
         // Add torrent to client
         this.log(`📥 Adding: ${this.current} (${torrent.quality})`, 'info');
         await profile.addTorrent(torrent.downloadUrl);
@@ -180,6 +218,10 @@ export class BatchProcessor {
       
       for (const collage of collagesToCatchup) {
         try {
+          // Respect rate limit for catchup requests too
+          if (this.rateLimiter) {
+            await this.rateLimiter.acquire();
+          }
           await catchupCollage(collage.id, authKey);
           this.log(`✅ Cleared notifications for: ${collage.name}`, 'success');
           results.catchedUp.push(collage);
@@ -209,15 +251,13 @@ export class BatchProcessor {
     return results;
   }
 
-  /**
-   * Reset the processor state
-   */
   reset() {
     this.logs = [];
     this.progress = 0;
     this.total = 0;
     this.current = '';
     this.isProcessing = false;
+    this.rateLimiter = null;
     this.emitUpdate();
   }
 }

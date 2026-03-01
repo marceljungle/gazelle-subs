@@ -1,8 +1,5 @@
 import styles from '../styles.module.css';
 
-/**
- * Get unique quality formats from torrents (FLAC, MP3, etc.)
- */
 function getUniqueQualities(torrents) {
   const qualities = new Set();
   for (const t of torrents) {
@@ -21,9 +18,6 @@ function getUniqueQualities(torrents) {
   return Array.from(qualities);
 }
 
-/**
- * Get unique media sources from torrents (CD, WEB, Vinyl, etc.)
- */
 function getUniqueSources(torrents) {
   const sources = new Set();
   for (const t of torrents) {
@@ -37,9 +31,6 @@ function getUniqueSources(torrents) {
   return Array.from(sources);
 }
 
-/**
- * Group Item Component - Displays a single torrent group
- */
 export function GroupItem({ group, onToggle, isSelected }) {
   const handleClick = (e) => {
     e.stopPropagation();
@@ -87,9 +78,6 @@ export function GroupItem({ group, onToggle, isSelected }) {
   );
 }
 
-/**
- * Collage Item Component - Displays a collage with its groups
- */
 export function CollageItem({ 
   collage, 
   selectedGroups, 
@@ -97,6 +85,7 @@ export function CollageItem({
   onToggleGroup, 
   onToggleExpand,
   onToggleCatchup,
+  showCatchup = true,
 }) {
   const isCollageSelected = collage.groups.every(g => selectedGroups.has(g.id));
   const isPartiallySelected = collage.groups.some(g => selectedGroups.has(g.id)) && !isCollageSelected;
@@ -135,18 +124,20 @@ export function CollageItem({
         <span className={styles['collage-count']}>
           {collage.groups.length} release{collage.groups.length > 1 ? 's' : ''}
         </span>
-        <label 
-          className={styles['collage-catchup']} 
-          onclick={(e) => e.stopPropagation()}
-          title="Clear notifications for this collage after adding"
-        >
-          <input
-            type="checkbox"
-            checked={collage.catchup !== false}
-            onclick={handleCatchupToggle}
-          />
-          <span>🧹</span>
-        </label>
+        {showCatchup && (
+          <label 
+            className={styles['collage-catchup']} 
+            onclick={(e) => e.stopPropagation()}
+            title="Clear notifications for this collage after adding"
+          >
+            <input
+              type="checkbox"
+              checked={collage.catchup !== false}
+              onclick={handleCatchupToggle}
+            />
+            <span>🧹</span>
+          </label>
+        )}
       </div>
       <div className={`${styles['groups-container']} ${collage.expanded ? styles.expanded : ''}`}>
         {collage.groups.map(group => (
@@ -162,9 +153,6 @@ export function CollageItem({
   );
 }
 
-/**
- * Collages List Component - Displays all collages
- */
 export function CollagesList({ 
   collages, 
   selectedGroups, 
@@ -172,6 +160,7 @@ export function CollagesList({
   onToggleGroup, 
   onToggleExpand,
   onToggleCatchup,
+  showCatchup = true,
 }) {
   if (collages.length === 0) {
     return (
@@ -193,6 +182,7 @@ export function CollagesList({
           onToggleGroup={onToggleGroup}
           onToggleExpand={onToggleExpand}
           onToggleCatchup={onToggleCatchup}
+          showCatchup={showCatchup}
         />
       ))}
     </>

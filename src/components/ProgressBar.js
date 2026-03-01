@@ -1,8 +1,5 @@
 import styles from '../styles.module.css';
 
-/**
- * Progress Bar Component - Shows download progress
- */
 export function ProgressBar({ progress, total, current, logs }) {
   const percentage = total > 0 ? Math.round((progress / total) * 100) : 0;
 
@@ -33,9 +30,6 @@ export function ProgressBar({ progress, total, current, logs }) {
   );
 }
 
-/**
- * Stats Bar Component - Shows selection statistics
- */
 export function StatsBar({ totalCollages, selectedGroups, totalTorrents }) {
   return (
     <div className={styles['stats-bar']}>
@@ -55,16 +49,10 @@ export function StatsBar({ totalCollages, selectedGroups, totalTorrents }) {
   );
 }
 
-/**
- * Loading Spinner Component
- */
 export function LoadingSpinner() {
   return <div className={styles['loading-spinner']} />;
 }
 
-/**
- * Action Buttons Component
- */
 export function ActionButtons({ onAdd, onCancel, disabled, isProcessing }) {
   return (
     <div className={styles['modal-actions']}>

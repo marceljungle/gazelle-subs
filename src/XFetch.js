@@ -1,15 +1,4 @@
-/**
- * XFetch - HTTP request wrapper for Tampermonkey/Greasemonkey
- * Uses GM.xmlHttpRequest for cross-origin requests
- */
 export const XFetch = {
-  /**
-   * Send a POST request
-   * @param {string} url - Target URL
-   * @param {string|FormData|null} data - Request body
-   * @param {Object} headers - Request headers
-   * @returns {Promise<Object>} Response wrapper
-   */
   post: async (url, data, headers = {}) => {
     return new Promise((resolve, reject) => {
       GM.xmlHttpRequest({
@@ -35,12 +24,6 @@ export const XFetch = {
     });
   },
 
-  /**
-   * Send a GET request
-   * @param {string} url - Target URL
-   * @param {Object} headers - Request headers
-   * @returns {Promise<Object>} Response wrapper
-   */
   get: async (url, headers = {}) => {
     return new Promise((resolve, reject) => {
       GM.xmlHttpRequest({
