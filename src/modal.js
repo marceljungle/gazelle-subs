@@ -279,8 +279,15 @@ function ModalContent({ panel, data, onClose }) {
 
   return (
     <div className={styles['modal-wrapper']}>
-      <div className={styles['modal-title']}>
+      <div className={styles['modal-title']} style="position: relative;">
         🎵 GazelleSubs - {data.siteName}
+        <button
+          onclick={onClose}
+          style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1;"
+          title="Close"
+        >
+          ✕
+        </button>
       </div>
       <div className={styles['modal-content']} data-modal-content>
         {renderContent()}
@@ -405,8 +412,15 @@ export async function openCollageViewModal(collageId) {
   // Show loading state
   panel.setContent(
     <div className={styles['modal-wrapper']}>
-      <div className={styles['modal-title']}>
+      <div className={styles['modal-title']} style="position: relative;">
         🎵 GazelleSubs - Loading...
+        <button
+          onclick={closeModal}
+          style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1;"
+          title="Close"
+        >
+          ✕
+        </button>
       </div>
       <div className={styles['modal-content']} style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
         <LoadingSpinner />
@@ -435,8 +449,15 @@ export async function openCollageViewModal(collageId) {
     if (!data.collages.length || data.collages[0].groups.length === 0) {
       panel.setContent(
         <div className={styles['modal-wrapper']}>
-          <div className={styles['modal-title']}>
+          <div className={styles['modal-title']} style="position: relative;">
             🎵 GazelleSubs
+            <button
+              onclick={closeModal}
+              style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1;"
+              title="Close"
+            >
+              ✕
+            </button>
           </div>
           <div className={styles['modal-content']} style="text-align: center; padding: 40px;">
             <p style="color: #888;">No torrent groups found in this collage.</p>
@@ -457,8 +478,15 @@ export async function openCollageViewModal(collageId) {
     console.error('[GazelleSubs] API fetch failed:', error);
     panel.setContent(
       <div className={styles['modal-wrapper']}>
-        <div className={styles['modal-title']}>
+        <div className={styles['modal-title']} style="position: relative;">
           🎵 GazelleSubs - Error
+          <button
+            onclick={closeModal}
+            style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1;"
+            title="Close"
+          >
+            ✕
+          </button>
         </div>
         <div className={styles['modal-content']} style="text-align: center; padding: 40px;">
           <p style="color: #ef4444;">Failed to fetch collage data.</p>
@@ -631,8 +659,15 @@ export function openSettingsDialog() {
 
   panel.setContent(
     <div className={styles['modal-wrapper']} style="max-width: 500px;">
-      <div className={styles['modal-title']}>
+      <div className={styles['modal-title']} style="position: relative;">
         ⚙️ GazelleSubs Settings
+        <button
+          onclick={closeDialog}
+          style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1;"
+          title="Close"
+        >
+          ✕
+        </button>
       </div>
       <div className={styles['modal-content']} data-settings-content>
         {renderSettings()}

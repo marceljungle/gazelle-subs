@@ -1,8 +1,5 @@
 import styles from '../styles.module.css';
 
-/**
- * Get unique quality formats from torrents (FLAC, MP3, etc.)
- */
 function getUniqueQualities(torrents) {
   const qualities = new Set();
   for (const t of torrents) {
@@ -21,9 +18,6 @@ function getUniqueQualities(torrents) {
   return Array.from(qualities);
 }
 
-/**
- * Get unique media sources from torrents (CD, WEB, Vinyl, etc.)
- */
 function getUniqueSources(torrents) {
   const sources = new Set();
   for (const t of torrents) {
@@ -37,9 +31,6 @@ function getUniqueSources(torrents) {
   return Array.from(sources);
 }
 
-/**
- * Group Item Component - Displays a single torrent group
- */
 export function GroupItem({ group, onToggle, isSelected }) {
   const handleClick = (e) => {
     e.stopPropagation();
@@ -87,9 +78,6 @@ export function GroupItem({ group, onToggle, isSelected }) {
   );
 }
 
-/**
- * Collage Item Component - Displays a collage with its groups
- */
 export function CollageItem({ 
   collage, 
   selectedGroups, 
@@ -165,9 +153,6 @@ export function CollageItem({
   );
 }
 
-/**
- * Collages List Component - Displays all collages
- */
 export function CollagesList({ 
   collages, 
   selectedGroups, 

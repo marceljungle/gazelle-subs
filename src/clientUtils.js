@@ -1,16 +1,5 @@
 import { XFetch } from './XFetch';
 
-/**
- * Add a torrent to the client
- * @param {string} torrentUrl - Torrent download URL
- * @param {string} clientUrl - Client base URL
- * @param {string} username - Client username
- * @param {string} password - Client password
- * @param {string} client - Client type (qbit, trans, flood, deluge, rutorrent)
- * @param {string} path - Save location path
- * @param {string} category - Category name (qbit only)
- * @returns {Promise<boolean>} True if successful
- */
 export const addTorrent = async (
   torrentUrl,
   clientUrl,
@@ -177,14 +166,6 @@ export const addTorrent = async (
   }
 };
 
-/**
- * Test connection to a torrent client
- * @param {string} clientUrl - Client base URL
- * @param {string} username - Client username
- * @param {string} password - Client password
- * @param {string} client - Client type
- * @returns {Promise<boolean>} True if connection successful
- */
 export async function testClient(clientUrl, username, password, client) {
   const clients = {
     trans: async () => {
@@ -261,13 +242,6 @@ export async function testClient(clientUrl, username, password, client) {
   }
 }
 
-/**
- * Get categories from qBittorrent
- * @param {string} clientUrl - qBittorrent base URL
- * @param {string} username - Username
- * @param {string} password - Password
- * @returns {Promise<string[]>} List of category names
- */
 export const getCategories = async (clientUrl, username, password) => {
   await XFetch.post(
     `${clientUrl}/api/v2/auth/login`,
@@ -283,11 +257,6 @@ export const getCategories = async (clientUrl, username, password) => {
   }
 };
 
-/**
- * Auto-detect client type from URL
- * @param {string} url - Client URL
- * @returns {Promise<string>} Client type or 'unknown'
- */
 export async function detectClient(url) {
   try {
     const res = await XFetch.get(url);
