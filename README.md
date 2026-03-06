@@ -20,7 +20,7 @@ Tested on Redacted and Orpheus using qBittorrent.
 |---------|
 | ![Group Info](docs/screenshots/group_info.png)|
 
-### Collage Batch Download
+### Collage/Artist Batch Download
 
 | Collage/Artist view |
 |---------|
