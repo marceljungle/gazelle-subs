@@ -1,7 +1,8 @@
 import { profileManager } from './profileManager';
 import { parseSubscribedCollages } from './collageParser';
-import { openModal, createTriggerButton, openCollageViewModal, createCollageViewButton, openSettingsDialog } from './modal';
+import { openModal, createTriggerButton, openCollageViewModal, createCollageViewButton, openSettingsDialog, openArtistModal, createArtistButton } from './modal';
 import { isCollageViewPage, getCollageIdFromUrl } from './collageApi';
+import { isArtistPage } from './artistParser';
 import { isSupportedSite, getSiteName } from './sites';
 
 // Check if we're on the subscribed collages page
@@ -59,6 +60,15 @@ async function init() {
 
     // Register menu command for collage view
     GM.registerMenuCommand('🎵 Open Batch Download', () => openCollageViewModal(collageId));
+    return;
+  }
+
+  // Artist page - batch download from artist discography
+  if (isArtistPage()) {
+    console.log(`[GazelleSubs] On ${siteName} artist page, setting up artist batch download...`);
+
+    createArtistButton();
+    GM.registerMenuCommand('🎵 Open Batch Download', openArtistModal);
     return;
   }
 

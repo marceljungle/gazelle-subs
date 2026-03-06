@@ -3,13 +3,14 @@ import { parseSubscribedCollages, QualityTypes, MediaTypes } from './collagePars
 import { profileManager } from './profileManager';
 import { batchProcessor } from './batchProcessor';
 import { fetchCollageFromApi } from './collageApi';
+import { parseArtistPage } from './artistParser';
 import { CollagesList } from './components/CollageItem';
 import { ProfileSelector } from './components/ProfileSelector';
 import { ControlsPanel } from './components/FilterControls';
 import { ProgressBar, StatsBar, ActionButtons, LoadingSpinner } from './components/ProgressBar';
 
 function ModalContent({ panel, data, onClose }) {
-  const showCatchup = data.totalCollages > 1 || !!data.collages[0]?.catchupUrl;
+  const showCatchup = !data.hideCatchup;
   // State management
   let state = {
     collages: data.collages.map(c => ({ ...c, catchup: false })), // Add catchup flag to each collage (off by default)
@@ -513,6 +514,103 @@ export function createCollageViewButton(collageId, collageName) {
   button.onclick = () => openCollageViewModal(collageId);
 
   // Add styles for the button (outside shadow DOM) - left-positioned for collage pages
+  GM_addStyle(`
+    .gazelle-subs-trigger--left {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 9999;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+      color: #e0e0e0;
+      border: 1px solid #444;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      transition: all 0.2s;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .gazelle-subs-trigger--left:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+      border-color: #666;
+    }
+  `);
+
+  document.body.appendChild(button);
+}
+
+export function openArtistModal() {
+  const data = parseArtistPage();
+
+  const panel = VM.getPanel({
+    theme: 'dark',
+    shadow: true,
+    style: stylesheet,
+  });
+
+  const closeModal = () => {
+    panel.hide();
+    document.body.style.overflow = 'auto';
+    batchProcessor.reset();
+  };
+
+  if (!data.collages.length) {
+    panel.setContent(
+      <div className={styles['modal-wrapper']}>
+        <div className={styles['modal-title']} style="position: relative;">
+          🎵 GazelleSubs - {data.artistName || 'Artist'}
+          <button
+            onclick={closeModal}
+            style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: none; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1;"
+            title="Close"
+          >
+            ✕
+          </button>
+        </div>
+        <div className={styles['modal-content']} style="text-align: center; padding: 40px;">
+          <p style="color: #888;">No torrent groups found on this artist page.</p>
+          <button className={`${styles.btn} ${styles['btn-secondary']}`} onclick={closeModal}>
+            Close
+          </button>
+        </div>
+      </div>
+    );
+
+    panel.setMovable(false);
+    panel.show();
+    document.body.style.overflow = 'hidden';
+    return;
+  }
+
+  panel.setContent(
+    <ModalContent panel={panel} data={data} onClose={closeModal} />
+  );
+
+  panel.setMovable(false);
+  panel.show();
+  document.body.style.overflow = 'hidden';
+
+  const handleEscape = (e) => {
+    if (e.key === 'Escape' && !batchProcessor.isProcessing) {
+      closeModal();
+      document.removeEventListener('keydown', handleEscape);
+    }
+  };
+  document.addEventListener('keydown', handleEscape);
+}
+
+export function createArtistButton() {
+  const existing = document.querySelector('.gazelle-subs-trigger');
+  if (existing) existing.remove();
+
+  const button = document.createElement('button');
+  button.className = 'gazelle-subs-trigger gazelle-subs-trigger--left';
+  button.innerHTML = '🎵 Batch Download';
+  button.onclick = () => openArtistModal();
+
   GM_addStyle(`
     .gazelle-subs-trigger--left {
       position: fixed;
