@@ -112,6 +112,7 @@ function transformApiResponse(response, site) {
     totalGroups: groups.length,
     totalTorrents: groups.reduce((sum, g) => sum + g.torrents.length, 0),
     siteName,
+    hideCatchup: true,
   };
 }
 
