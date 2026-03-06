@@ -22,7 +22,7 @@ Tested on Redacted and Orpheus using qBittorrent.
 
 ### Collage Batch Download
 
-| Collage view |
+| Collage/Artist view |
 |---------|
 | ![Collage View](docs/screenshots/collage_download.png)|
 
